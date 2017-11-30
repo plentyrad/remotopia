@@ -1,0 +1,83 @@
+{% extends 'master.html' %}
+{% block embed %}
+
+<div class="checkout-panel">
+    <div class="panel-body">
+        <h2 class="title">Edit Company</h2>
+
+        <div class="input-fields">
+            <form action="/admin/companies/{{company.id}}" method="POST">
+                <label for="logo">Logo</label>
+                <input type="text" name="logo" id="logo" value="{{company.logo}}"/>
+
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" value="{{company.name}}"/>
+
+                <label for="url">URL</label>
+                <input type="text" name="url" id="url" value="{{company.url}}"/>
+
+                <label for="description">Description</label>
+                <input type="text" name="description" id="description" value="{{company.description}}"/>
+
+                <label for="year_founded">Year Founded</label>
+                <input type="text" name="year_founded" id="year_founded" value="{{company.year_founded}}"/>
+
+                <label for="revenue">Revenue</label>
+                <select name="revenue" id="revenue">
+                    {% for rev in revenue %}
+                        <option value="{{loop.index - 1}}">{{rev}}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="employees">Employees</label>
+                <select name="employees" id="employees">
+                    {% for emp in employees %}
+                    <option value="{{loop.index - 1}}">{{emp}}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="avg_salaries">Average Salaries</label>
+                Engineering: <input type="text" name="avg_engineering" value="{{company.avg_salaries.engineering}}"/>
+                Marketing: <input type="text" name="avg_marketing" value="{{company.avg_salaries.marketing}}"/>
+                Sales: <input type="text" name="avg_sales" value="{{company.avg_salaries.sales}}"/>
+                Business: <input type="text" name="avg_business" value="{{company.avg_salaries.business}}"/>
+                Misc: <input type="text" name="avg_misc" value="{{company.avg_salaries.misc}}"/>
+
+                <label for="tags">Tags</label>
+                <input type="text" id="tags" class="select-multiple" name="tags" data-type="text" />
+
+                <div>
+                    <input type="submit" style="color:white" class="btn purple" value="Update" />
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="/js/choices.min.js"></script>
+<script>const tags = [];</script>
+{% for tag in company.tags %}
+<script>tags.push({
+    label: '{{tag}}',
+    value: '{{tag}}',
+    id: '{{tag}}'
+})</script>
+{% endfor %}
+
+<script>
+    new Choices('#tags', {
+        silent: false,
+        items: tags,
+        searchFields: ['label', 'value'],
+        position: 'auto',
+        removeItemButton: true
+    });
+
+    document.getElementById('tags')
+</script>
+{% endblock %}

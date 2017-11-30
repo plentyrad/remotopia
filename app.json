@@ -1,0 +1,14 @@
+{
+  "name": "remote-rush",
+  "description": "Directory and job board for remote companies",
+  "repository": "https://github.com/plentyrad/remote-rush",
+  "website": "https://remoterush.com/",
+  "addons": ["heroku-postgresql:hobby-dev"],
+  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "env": {
+    "NODE_ENV": { "value": "production" }
+  },
+  "scripts": {
+    "postdeploy": "NODE_ENV=development node ./babel.reset_db"
+  }
+}

@@ -1,0 +1,34 @@
+{% extends 'master.html' %}
+
+{% block embed %}
+  {% if jobs.length == 0 %}
+    No jobs pending.
+  {% endif %}
+
+  {% if jobs.length > 0 %}
+  <table class="table">
+    <tbody>
+    {% for job in jobs %}
+      <tr>
+        <td data-label="company">{{ job.company.name }}</td>
+        <td data-label="position"><a href="/job/{{job.id}}" class="position">{{ job.title }}</a></td>
+        <td data-label="tags">
+          <ul class="tags">
+            {% for tag in job.tags %}
+            <li><a href="#">{{ tag }} <span>1</span></a></li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td data-label="posted">{{ job.created_at|formatDate }}</td>
+        <td data-label="approve"><a href="/job/approve/{{job.id}}">Approve</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

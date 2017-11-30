@@ -1,0 +1,26 @@
+{% extends 'master.html' %}
+{% block embed %}
+
+<div class="cta">
+    <h1>{{ job.title }} at {{job.company.name}}</h1>
+    <div class="row" style="font-size:14px; margin-top:25px">
+        {% if (job.company.year_founded) %}
+            <small>Founded:</small><br> {{ job.company.year_founded }} <br>
+        {% endif %}
+        {% if (job.company.employees) %}
+            <small>Est. Employees:</small><br> {{ job.company.employees|formatEmployeeCount }} <br>
+        {% endif %}
+        {% if (job.company.revenue) %}
+            <small>Est. Revenue:</small><br> {{ job.company.revenue|formatRevenue }} <br>
+        {% endif %}
+    </div>
+    <hr>
+    <p>{{ job.description | safe }}</p>
+
+    {{ job.contact_email }}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

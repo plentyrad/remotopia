@@ -1,0 +1,92 @@
+{% extends 'master.html' %}
+{% import 'macros.html' as macros %}
+
+{% block embed %}
+<div class="row">
+    <div class="column" style="text-align:center">
+        <h1>Work where you feel best, no matter the location.</h1>
+        <p>Use Remote Rush to find your next remote employer!</p>
+        <!--<a href="#" class="btn purple" disabled>Find a Job <small>(Coming soon)</small></a>-->
+        <div id="sub">
+            <form class="newsletter">
+                <span class="container active">
+                <input class="required" type="email" id="email" name="email" placeholder="Get notified of new remote jobs"/>
+                </span>
+                <span id="subscribe" class="submit" title="Subscribe"><div class="checkmark medium"></div></span>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="filters" class="filters row">
+    <div class="five columns" style="font-size:14px">
+        <small>Employees</small>:
+        <select name="employees" data-filter="employees">
+            {% for employee in employees %}
+                <option value="{{loop.index - 1}}"
+                        {% if ((loop.index - 1) == employeeIndex) %} selected {% endif %}
+                >{{employee}}</option>
+            {% endfor %}
+        </select>
+
+        <small>Revenue:</small>
+        <select name="revenue" data-filter="revenue">
+            {% for rev in revenue %}
+            <option value="{{loop.index - 1}}"
+                    {% if ((loop.index - 1) == revenueIndex) %} selected {% endif %}
+            >{{rev}}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    {% if companies.length == 0 %}
+        No companies so far. Wanna be the first?
+    {% endif %}
+
+    {% if companies.length > 0 %}
+        {% for company in companies %}
+            {{ macros.renderCompanyRow(ctx, company, '/') }}
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const request = new XMLHttpRequest();
+
+    function updateQueryStringParameter(uri, key, value) {
+        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return uri + separator + key + "=" + value;
+        }
+    }
+
+    request.onreadystatechange = function() {
+        if(request.readyState === 4 && request.status === 200) {
+            document.getElementById('sub').innerHTML = '<h2>Subscribed!</h2>'
+        }
+    }
+
+    request.open("POST", '/subscribe');
+    request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+    document.getElementById('subscribe').addEventListener('click', function() {
+        request.send(JSON.stringify({ email: document.getElementById('email').value }));
+    });
+
+    const filters = document.querySelectorAll("#filters select");
+    filters.forEach((filter) => {
+      filter.addEventListener('change', (evt)=> {
+        const url = updateQueryStringParameter(window.location.href, evt.target.getAttribute('data-filter'), evt.target.selectedIndex)
+        window.location.href = url;
+      })
+    })
+</script>
+{% endblock %}

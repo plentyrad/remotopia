@@ -1,0 +1,95 @@
+
+{#
+  Put your view macros here.
+
+  If you find yourself repeating the same markup a lot, consider wrapping
+  it in a macro. They're basically view helper functions that output HTML.
+#}
+
+{% macro renderJobRow(ctx, job) %}
+<li class="listing clearfix">
+    <div style="width:100%;height:40px;padding:10px;">
+        <div class="image_wrapper" style="float:left">
+            {% if (job.company.logo) %}
+                <img src="{{ job.company.logo }}" width="60px" height="60px"/>
+            {% else %}
+                <div id="initials" style="width:40px;height:40px">{{ job.company.name|initials }}</div>
+            {% endif %}
+        </div>
+        <div class="info" style="float:left">
+            <span class="job_title">{{ job.title }}</span>
+            <span class="job_info"><small>{{ job.company.name }}</small></span>
+            <span style="margin-left:10px"><i class="fa fa-clock-o" aria-hidden="true"></i> <small>{{ job.created_at|prettyDate }}</small></span>
+        </div>
+
+        <span class="job_type {{ job.term|formatTermClass }}">{{ job.term|formatTerm }}</span>
+    </div>
+    <div class="content hide" style="padding:25px">
+        {{ job.description | safe }}
+    </div>
+</li>
+{% endmacro %}
+
+{% macro renderCompanyRow(ctx, company) %}
+<div class="row" style="border: 1px solid #e5e5e5; margin-bottom: 10px;padding:10px;font-size: 14px;">
+    <div style="margin-top:15px">
+        <div class="two columns">
+            {% if (company.logo) %}
+                <img src="{{ company.logo }}" width="50px" height="50px"/>
+            {% else %}
+                <div id="initials" style="width:30px;height:30px">{{ company.name|initials }}</div>
+            {% endif %}
+        </div>
+        <div class="two columns">{{company.name}}<br><a href="{{ company.url }}">{{ company.url }}</a></div>
+        <div class="two columns"><small>Founded:</small><br> {{ company.year_founded }}</div>
+        <div class="two columns"><small>Est. Employees:</small><br> {{ company.employees|formatEmployeeCount }}</div>
+        <div class="two columns"><small>Est. Revenue:</small><br> {{ company.revenue|formatRevenue }}</div>
+        <div class="two columns">{% if ctx.currUser %}<a href="/admin/companies/{{company.id}}">Edit</a>{% endif %}</div>
+    </div>
+    <div class="ten columns offset-by-two" style="margin-top:15px;border-top: 1px solid #e5e5e5">
+        <div style="margin-top:15px;"><small>{{ company.description}}</small></div>
+    </div>
+    <ul class="tags purple">
+        {% for k, val in company.avg_salaries %}
+        {% if val %}<li><a href="#">{{ k }} <span>${{ val }}</span></a></li>{% endif %}
+        {% endfor %}
+    </ul>
+</div>
+{% endmacro %}
+
+
+{% macro renderPaginator(paginator) %}
+  {% if paginator %}
+    {# TODO: Extract to CSS file #}
+    <style>
+     .pagination > li > span {
+       color: #777;
+       border-top: 0;
+       border-bottom: 0;
+       border-left: 1px solid #ddd;
+       border-right: 1px solid #ddd;
+     }
+     .pagination > li > span:hover {
+       color: #777;
+       background-color: transparent;
+     }
+    </style>
+    <nav class="paginator" style="text-align:center;">
+      <ul class="pagination">
+        {% for pg in paginator %}
+          {% if pg.kind == 'BUTTON' %}
+            <li class="{% if pg.isActive %}active{% endif %}">
+              <a href="{{ pg.href }}">
+                <span aria-hidden="true">{{ pg.text }}</span>
+              </a>
+            </li>
+          {% elif pg.kind == 'SEPARATOR' %}
+            <li class="separator">
+              <span>...</span>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endmacro %}

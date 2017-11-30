@@ -1,0 +1,260 @@
+{% extends 'master.html' %}
+{% block embed %}
+<form id="multi-step-form" action="/post" method="POST">
+    <div id="steps-choose">
+        <div id="s1" data-el="step1" data-step="1" class="selected"><button>1</button><br /></div>
+        <div id="s2" data-el="step2" data-step="2"><button>2</button><br /></div>
+        <div id="s3" data-el="step3" data-step="3"><button>3</button><br /></div>
+        <div id="s4" data-el="step4" data-step="4"><button>4</button><br /></div>
+    </div>
+
+    <div id="step1" class="step-box" data-step="1">
+        <h3>Hey! Let's learn some more about your company...</h3>
+
+        <br /><br /><br />
+
+        <small>If you do not find your company, you may skip this field.</small>
+        <select id="company" name="company_id" class="required" selected="selected" />
+            <option placeholder>Who do you work for?</option>
+        </select>
+
+        <br /><br /><br />
+
+        <div id="toggle">
+            <input type="text" name="name" id="name" class="required" data-error="Company name is required" placeholder="What's your company's name? (Acme Inc)"/>
+
+            <br /><br />
+
+            <input type="text" name="url" id="url" class="required" data-error="Company URL is required and must be a valid URL"  placeholder="What's your company's url? (http://acme.com)"/>
+        </div>
+
+        <input type="text" name="contact_email" class="name required" placeholder="What's your company email address?">
+        <br /><br /><br />
+
+        <button class="next" data-next="step2">Next</button>
+    </div>
+    <div id="step2" class="step-box hide" data-step="2">
+        <h3>Now, let's get to that open position...</h3>
+
+        <br /><br /><br />
+
+        <select id="type" name="type" class="required"/>
+            <option value="" disabled selected>What type of position is this?</option>
+            <option value="engineering">Engineering</option>
+            <option value="design">Design</option>
+            <option value="marketing">Marketing</option>
+            <option value="sales">Sales</option>
+            <option value="business">Business/Management</option>
+            <option value="other">Other</option>
+        </select>
+
+        <br /><br /><br />
+
+        <select id="term" name="term" class="required"/>
+            <option value="" disabled selected>What type of commitment?</option>
+            <option value="full">Full Time</option>
+            <option value="part">Part Time</option>
+            <option value="contract">Contract</option>
+        </select>
+
+        <br /><br /><br />
+
+        <input type="text" name="title" id="title" class="required" data-error="Title is required" placeholder="What is the position title? (UI/UX Developer)"/>
+
+        <br /><br /><br />
+
+        <small>We support <a href="https://daringfireball.net/projects/markdown/syntax" style="text-decoration:none;">markdown</a> syntax. :)</small>
+        <textarea id="description" class="required" data-error="Description is required" name="description" placeholder="Let's get creative, what are you looking for?" style="width:100%;height: 200px;overflow:scroll"></textarea>
+
+        <br /><br /><br />
+
+        <button class="next" data-next="step3">Review</button>
+    </div>
+    <div id="step3" class="step-box hide" data-step="3">
+        <h3>Nice! Check it out...</h3>
+        <br /><br /><br />
+
+        <div id="markdown"></div>
+
+        <br /><br /><br />
+        <button class="next" data-next="step4">Next</button>
+    </div>
+    <div id="step4" class="step-box hide" data-step="4">
+        <label for="card-element">Payment Details</label>
+        <div id="card-element"></div>
+        <div id="card-errors" role="alert"></div>
+        <small>Your card will be charged $49 and be processed by Stripe.</small>
+        <br /><br /><br />
+        <button id="payment">Submit</button>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="/js/choices.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.4.0/markdown-it.min.js"></script>
+<script>const companies = [];</script>
+
+{% for company in companies %}
+    <script>companies.push({
+        label: '{{company.name}} - {{company.url}}',
+        value: '{{company.id}}',
+        id: '{{company.id}}'
+    })</script>
+{% endfor %}
+
+<script>
+    __('#multi-step-form').get().addEventListener('submit', (e) => {
+        e.preventDefault();
+    });
+
+    const validate = (parentId) => {
+        const required = document.querySelectorAll(`#${parentId} .required`);
+        let error = false;
+
+        for (let i=0; i < required.length; i++) {
+            const cur = required[i];
+            if ((cur.id == 'name' || cur.id == 'url') && document.getElementById('company').value >= 1) continue;
+            if (!cur.value) {
+                error = true;
+                cur.classList.add('input-error')
+                // errors.innerHTML += `${cur.getAttribute('data-error')}<br>`;
+            } else {
+                cur.classList.remove('input-error')
+            }
+        }
+
+        return error;
+    };
+
+    new Choices('#company', {
+        silent: false,
+        choices: companies,
+        searchFields: ['label', 'value'],
+        position: 'auto',
+        placeholder: true,
+        placeholderValue: 0,
+    });
+
+    const goToPage = (parentId, goToId) => {
+        if (validate(parentId)) return;
+
+        const step = parseInt(__(`#${parentId}`).get().getAttribute('data-step'));
+
+        __(`#${parentId}`).fade('out', 500);
+
+        setTimeout(() => {
+            __(`#${goToId}`).fade('in', 500);
+
+            if (step == 2) {
+                const md = markdownit();
+                const result = md.render(__(`#description`).get().value);
+                __(`#markdown`).get().innerHTML = result;
+            }
+
+            __(`#s${step}`).get().classList.remove('selected')
+            __(`#s${step + 1}`).get().classList.add('selected')
+        }, 450)
+    };
+
+    const nextButtons = document.querySelectorAll('.next');
+    for(let i = 0; i < nextButtons.length; i++) {
+        const cur = nextButtons[i];
+        cur.addEventListener('click', (e) => {
+            e.preventDefault();
+            const goToId = e.target.getAttribute('data-next');
+            const parentId = e.target.parentNode.id;
+            console.log(parentId, goToId)
+            goToPage(parentId, goToId)
+        })
+    }
+
+    const nav = __('#steps-choose').get();
+    const navItems = nav.childNodes;
+    for (let i = 0; i < navItems.length; i++) {
+        const cur = navItems[i];
+        cur.addEventListener('click', (e) => {
+            e.preventDefault();
+            const parent = __('#steps-choose > .selected').get();
+            const parentId = parent.getAttribute('data-el');
+            let goToId = cur.getAttribute('data-el');
+            if(parentId === goToId)
+                goToId = `step${parseInt(parent.getAttribute('data-step')) + 1}`;
+            goToPage(parentId, goToId)
+        })
+    }
+
+    const el = __('#company').get();
+    el.addEventListener('change', () => {
+        if (el.value >= 1) {
+            __('#toggle').fade('out', 500);
+        } else {
+            __('#toggle').fade('in', 500);
+        }
+    })
+
+    const stripe = Stripe(`{{stripe_key}}`);
+    const elements = stripe.elements();
+    const style = {
+        base: {
+            color: '#32325d',
+            lineHeight: '18px',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    };
+
+
+    const stripeTokenHandler = (token) => {
+        var form = document.getElementById('multi-step-form');
+        var hiddenInput = document.createElement('input');
+        hiddenInput.setAttribute('type', 'hidden');
+        hiddenInput.setAttribute('name', 'stripeToken');
+        hiddenInput.setAttribute('value', token.id);
+        form.appendChild(hiddenInput);
+        form.submit();
+    }
+
+    const payment = () => {
+        stripe.createToken(card).then(function(result) {
+            if (result.error) {
+                // Inform the user if there was an error
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                // Send the token to your server
+                stripeTokenHandler(result.token);
+            }
+        });
+    };
+
+    const card = elements.create('card', {style: style});
+    card.mount('#card-element');
+
+    card.addEventListener('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    const pay = document.getElementById('payment');
+    pay.addEventListener('click', function(event) {
+        event.preventDefault();
+        payment();
+    });
+
+</script>
+{% endblock %}

@@ -1,0 +1,1 @@
+ALTER TABLE jobs ADD COLUMN term varchar(100) NOT NULL DEFAULT 'full';

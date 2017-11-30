@@ -1,0 +1,1 @@
+ALTER TABLE companies ADD COLUMN logo VARCHAR(255) NULL;
